@@ -1,9 +1,3 @@
-# ai-codyssey
-코디세이 학습을 위한 repository 입니다.
-
----
-
-```md
 # Docker Web Server Workshop
 
 ## 0. 프로젝트 개요
