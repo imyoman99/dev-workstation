@@ -54,7 +54,7 @@
 ```bash
 $ pwd
 
-/Users/ymru996022/ai-codyssey
+/Users/ymru996022/dev-setup-codyssey
 
 $ ls -al
 
@@ -92,7 +92,7 @@ $ rmdir test-dir                      # 디렉토리 삭제
 ```
 
 > **절대 경로 vs 상대 경로**
-> - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/ai-codyssey/app`
+> - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/dev-setup-codyssey/app`
 > - 상대 경로: 현재 위치 기준 경로. 예: `./app`, `../screenshots`
 > - 어디서 실행하든 같은 곳을 가리키려면 절대 경로, 프로젝트 내부 이동은 상대 경로가 편리하다.
 
@@ -324,7 +324,7 @@ UBUNTU_CODENAME=jammy
 root@a2279da0d836:/# exit
 exit
 
-ymru996022@c5r3s4 ai-codyssey % 
+ymru996022@c5r3s4 dev-setup-codyssey %
 ```
 
 📸 증거: [screenshots/11-ubuntu-shell.png](screenshots/11-ubuntu-shell.png)
@@ -378,7 +378,7 @@ $ docker attach my-nginx-8080
 
 > **관찰 정리**
 > - `exec`은 **새로운 셸 프로세스를 추가로 생성**해서 접속하므로, `exit` 해도 컨테이너에 영향이 없다. → 디버깅/점검용으로 안전
-> - `attach`는 **메인 프로세스(PID 1)에 직접 붙는 것**이므로, `Ctrl+C`로 종료하면
+> - `attach`는 **메인 프로세스(PID 1에 직접 붙는 것**이므로, `Ctrl+C`로 종료하면
 >   메인 프로세스가 죽어 컨테이너 자체가 종료된다. 반드시 `Ctrl+P, Ctrl+Q`로 분리해야 한다.
 > - 결론: 실행 중인 컨테이너 내부 작업은 `exec`을 사용하는 것이 안전하다.
 
@@ -577,7 +577,7 @@ core.bare=false
 core.logallrefupdates=true
 core.ignorecase=true
 core.precomposeunicode=true
-remote.origin.url=https://github.com/imyoman99/ai-codyssey.git
+remote.origin.url=https://github.com/imyoman99/dev-setup-codyssey.git
 remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
@@ -649,7 +649,7 @@ branch.main.vscode-merge-base=origin/main
 ## 16. 폴더 구조
 
 ```
-ai-codyssey/
+dev-setup-codyssey/
 ├── README.md                         # 전체 프로젝트 설명서
 ├── app/
 │   ├── Dockerfile                    # NGINX 커스텀 이미지 빌드용
@@ -687,3 +687,10 @@ ai-codyssey/
 - **포트 매핑의 필요성**: 격리된 컨테이너 네트워크를 호스트와 연결 — 10번 섹션
 - **Docker 볼륨**: 컨테이너 생명주기와 독립적인 영속 저장소 — 12번 섹션
 - **Git vs GitHub**: 로컬 버전관리 도구 vs 원격 협업 플랫폼 — 13번 섹션
+
+---
+
+## 18. 참고 사항
+
+저장소 이름이 `ai-codyssey`에서 `dev-setup-codyssey`로 변경되었으며, 이로 인해 문서 내 일부 경로·표기와 스크린샷 파일명/설명이 기존 자료와 조금 다르게 보일 수 있습니다. 다만 실습 내용, 실행 결과, 파일 구조, Docker 및 Git 동작 방식 자체는 동일하게 반영되었습니다.
+
