@@ -641,8 +641,8 @@ remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
 branch.main.vscode-merge-base=origin/main
-'''
-'''
+```
+
 
 📸 증거: [screenshots/15-git-config.png](screenshots/15-git-config.png)
 
@@ -665,16 +665,13 @@ branch.main.vscode-merge-base=origin/main
 
 ### 사례 1: 포트 충돌로 컨테이너 실행 실패
 
-- **문제**: `docker ru -d -p 8080:80 ...` 실행 시 `failed: port is already allocated` 에러 발생
+- **문제**: `docker run -d -p 8080:80 ...` 실행 시 `failed: port is already allocated` 에러 발생
 - **원인 가설**: 이미 8080 포트를 점유한 컨테이너 또는 프로세스가 존재
 - **확인**:
   ```bash
   $ docker ps            # 8080 사용 중인 컨테이너 확인
   $ lsof -i :8080        # 호스트 프로세스 확인
   ```
-
-- **문제**: `docker run -p 8080:80 ...` 실행 시 `port is already allocated` 에러 발생
-- **원인 가설**: 이미 8080 포트를 점유한 컨테이너 또는 프로세스가 존재
 - **해결**: 다른 호스트 포트(예: 8081)로 매핑하여 실행. 컨테이너 포트(80)는 그대로 두고
            호스트 포트만 바꾸면 되는 것이 포트 매핑의 장점임을 확인했다. (컨테이너 이름 확인 후 $ docker rm -f 으로 기존 컨테이너 삭제 후 재실행하는 방법도 있다.)
 
