@@ -22,10 +22,12 @@
 | Docker | v29.4.0 |
 | Git | v2.53.0 |
 | 에디터 | VSCode (GitHub 연동) |
+| 실행기간 | 2026.07.28~07.30 |
 
 > **OrbStack 사용 이유**: 서울캠퍼스 보안 정책상 sudo 권한이 제한되어
 > 일반적인 Docker 설치가 불가능하다. OrbStack은 sudo 없이 Docker 엔진을
 > 구동할 수 있어, 실행 후 터미널에서 `docker` 명령을 동일하게 사용할 수 있다.
+(단, 내부적으로 경량 가상머신을 거치므로 순수 Linux 호스트 환경과 네트워크 포트 매핑 시 미세한 차이가 발생할 수 있다.)
 
 ---
 
@@ -94,7 +96,7 @@ $ rmdir test-dir                      # 디렉토리 삭제
 > **절대 경로 vs 상대 경로**
 > - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/dev-setup-codyssey/app`
 > - 상대 경로: 현재 위치 기준 경로. 예: `./app`, `../screenshots`
-> - 어디서 실행하든 같은 곳을 가리키려면 절대 경로, 프로젝트 내부 이동은 상대 경로가 편리하다.
+> - 호스트 환경에서 스크립트를 작성할 때는 어디서 실행하든 같은 곳을 가리키는 절대 경로, 프로젝트 내부 이동이나 컨테이너 내부 작업 시에는 이식성이 좋은 상대 경로를 사용하는 것을 권장한다.
 
 ---
 
@@ -142,6 +144,9 @@ drwxr-xr-x  2 ymru996022  ymru996022  64 Jul 28 15:13 perm-dir
 > - `644` = `rw- r-- r--` : 소유자만 수정 가능, 나머지는 읽기만
 > - `755` = `rwx r-x r-x` : 소유자는 모든 권한, 나머지는 읽기+실행(디렉토리 진입)
 > - 디렉토리의 `x`는 "실행"이 아니라 **디렉토리 진입 권한**을 의미한다.
+
+> - 권한 설정 이유: 보안상 일반 텍스트 파일은 불필요한 실행을 막기 위해 최소 권한인 644를, 디렉토리는 내부 탐색이 가능해야 하므로 755를 적용했다.
+> - 실무 적용 사례: 실행이 필요한 쉘 스크립트(.sh)는 755를, 민감한 인증 키 파일은 소유자만 읽을 수 있도록 600 권한을 부여하는 것이 권장 패턴이다.
 
 📸 증거: [screenshots/07-permissions.png](screenshots/07-permissions.png)
 
@@ -378,9 +383,11 @@ $ docker attach my-nginx-8080
 
 > **관찰 정리**
 > - `exec`은 **새로운 셸 프로세스를 추가로 생성**해서 접속하므로, `exit` 해도 컨테이너에 영향이 없다. → 디버깅/점검용으로 안전
-> - `attach`는 **메인 프로세스(PID 1에 직접 붙는 것**이므로, `Ctrl+C`로 종료하면
+> - `attach`는 **메인 프로세스(PID 1)에 직접 붙는 것**이므로, `Ctrl+C`로 종료하면
 >   메인 프로세스가 죽어 컨테이너 자체가 종료된다. 반드시 `Ctrl+P, Ctrl+Q`로 분리해야 한다.
 > - 결론: 실행 중인 컨테이너 내부 작업은 `exec`을 사용하는 것이 안전하다.
+
+
 
 📸 증거: [screenshots/12-attach-vs-exec.png](screenshots/12-attach-vs-exec.png)
 
@@ -437,15 +444,14 @@ b180f16e3f22   my-nginx   "/docker-entrypoint.…"   4 hours ago   Up 3 seconds 
 
 📸 증거: [screenshots/13-docker-build.png](screenshots/13-docker-build.png)
 
+> **이미지 vs 컨테이너 (불변성과 런타임 변경)**
+> - 이미지(Image): 한 번 빌드되면 절대 변하지 않는 **불변성(Immutable)**을 가진 읽기 전용 템플릿이다.
+> - 컨테이너(Container): 이미지를 바탕으로 실행된 런타임 인스턴스로, 상단에 **쓰기 가능한 레이어(Writable Layer)**가 추가되어 내부에서 파일 생성이나 변경이 가능하다.
+
+> - 빌드 최적화 팁: .dockerignore 파일을 생성하여 불필요한 파일이 이미지 빌드 컨텍스트에 포함되는 것을 방지하면, 빌드 속도 향상과 용량 최적화가 가능하다.
 ---
 
 ## 10. 포트 매핑 및 접속 증거
-
-> **포트 매핑이 필요한 이유**
-> 컨테이너는 격리된 네트워크 공간에서 실행되므로, 호스트에서 직접 접근할 수 없다.
-> `-p <호스트포트>:<컨테이너포트>` 옵션으로 호스트의 포트를 컨테이너 내부 포트에
-> 연결해야 브라우저 접속이 가능하다. 또한 하나의 이미지를 서로 다른 호스트 포트
-> (8080/8081/8082)로 여러 번 실행할 수 있어, **동일 환경의 반복 재현**이 가능함을 확인했다.
 
 | 접속 주소 | 컨테이너 | 결과 |
 |------|------|------|
@@ -458,11 +464,20 @@ b180f16e3f22   my-nginx   "/docker-entrypoint.…"   4 hours ago   Up 3 seconds 
 - [screenshots/02-port-8081.png](screenshots/02-port-8081.png)
 - [screenshots/03-port-8082.png](screenshots/03-port-8082.png)
 
+> **포트 매핑이 필요한 이유**
+> 컨테이너는 격리된 네트워크 공간에서 실행되므로, 호스트에서 직접 접근할 수 없다.
+> `-p <호스트포트>:<컨테이너포트>` 옵션으로 호스트의 포트를 컨테이너 내부 포트에
+> 연결해야 브라우저 접속이 가능하다. 또한 하나의 이미지를 서로 다른 호스트 포트
+> (8080/8081/8082)로 여러 번 실행할 수 있어, **동일 환경의 반복 재현**이 가능함을 확인했다.
+
+> 보안 및 접근 제어: 외부 접근이 불필요한 경우 -p 127.0.0.1:8080:80처럼 로컬호스트로만 포트를 바인딩하는 것이 안전하다. 만약 원격지 브라우저에서 접근이 안 된다면, 호스트 장비의 인바운드 방화벽 규칙과 포트 포워딩 설정을 우선 점검해야 한다.
+
 ---
 
 ## 11. 바인드 마운트: 변경 즉시 반영
 
 ### 11-1. 실행 명령
+(전제조건: 터미널이 프로젝트 최상단 디렉토리에 위치해야 하며, 사전에 bind-app 폴더가 존재해야 한다.)
 
 ```bash
 $ docker run -d --name my-nginx-bind -p 8090:80 \
@@ -507,12 +522,25 @@ $ docker volume ls
 DRIVER    VOLUME NAME
 local     my-nginx-data
 
+$ docker volume inspect my-nginx-data
+
+[
+    {
+        "CreatedAt": "2026-07-29T11:24:18+09:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/my-nginx-data/_data",
+        "Name": "my-nginx-data",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+
 $ docker run -d --name my-nginx-vol -p 8091:80 \
   -v my-nginx-data:/usr/share/nginx/html my-nginx
 
   9b61de94ba8a482ef05584c8ce7457fba309da609e52688c8cf9062b94085b38
 ```
-👉 실제 사용한 명령/포트로 교체
 
 ### 12-2. 데이터 생성 → 컨테이너 삭제 → 데이터 유지 확인
 
@@ -553,7 +581,27 @@ persistent data
 > - 컨테이너는 삭제되면 내부 데이터도 사라지지만, 볼륨에 저장된 데이터는 살아남는다.
 >   → 위 실험에서 컨테이너 삭제 후에도 `data.txt`가 유지됨을 직접 검증했다.
 
-📸 증거: [screenshots/06-volume-persistence.png](screenshots/06-volume-persistence.png) 
+📸 증거: [screenshots/06-volume-persistence.png](screenshots/06-volume-persistence.png)
+
+
+### 12-3. 데이터 손실 방지를 위한 볼륨 백업 절차
+
+```bash
+# 볼륨(my-nginx-data)의 데이터를 현재 호스트 디렉토리($(pwd))의 backup.tar 파일로 압축하여 백업
+$ docker run --rm -v my-nginx-data:/data -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /data
+
+tar: removing leading '/' from member names
+/data/
+/data/data.txt
+
+# 백업 파일 생성 확인
+$ ls -al backup.tar
+
+-rw-r--r--  1 ymru996022  ymru996022  10240 Jul 29 11:25 backup.tar
+
+> **💡 볼륨 데이터 백업 절차**
+> 볼륨은 데이터를 안전하게 보관하지만, 만약의 사태(볼륨 자체의 삭제나 손상)에 대비한 백업 절차가 필요하다. 
+> 일회용 임시 컨테이너(`--rm`)를 띄워서 기존 볼륨(`my-nginx-data`)과 호스트의 디렉토리(`$(pwd)`)를 동시에 마운트한 뒤, 볼륨 안의 데이터를 압축(`tar`)하여 호스트로 빼내는 방식을 사용한다.
 
 ---
 
@@ -592,6 +640,7 @@ branch.main.vscode-merge-base=origin/main
 - 본 저장소를 VSCode에서 clone/push 하여 연동 확인
 
 📸 증거: [screenshots/16-vscode-github.png](screenshots/16-vscode-github.png)
+        정상적으로 Push 된 원격 저장소 확인 => [https://github.com/imyoman99/dev-setup-codyssey.git](https://github.com/imyoman99/dev-setup-codyssey.git)
 
 > **Git vs GitHub**
 > - Git: 내 컴퓨터에서 동작하는 **로컬 버전 관리 도구** (커밋, 브랜치, 이력 관리)
@@ -651,6 +700,7 @@ branch.main.vscode-merge-base=origin/main
 ```
 dev-setup-codyssey/
 ├── README.md                         # 전체 프로젝트 설명서
+├── backup.tar                        # 볼륨 백업 실습 결과물 (임시 컨테이너로 추출)
 ├── app/
 │   ├── Dockerfile                    # NGINX 커스텀 이미지 빌드용
 │   └── index.html                    # 커스텀 이미지에 포함되는 정적 콘텐츠
@@ -658,6 +708,7 @@ dev-setup-codyssey/
 │   └── index.html                    # 바인드 마운트 실습용
 ├── perm-file.txt                     # 권한 실습용 파일 (644)
 ├── perm-dir/                         # 권한 실습용 디렉토리 (755)
+│   └── .gitkeep                      # 빈 폴더를 Git 시스템에 추적/유지시키기 위한 더미 파일
 └── screenshots/
     ├── 01-port-8080.png              # localhost:8080 접속 화면
     ├── 02-port-8081.png              # localhost:8081 접속 화면
@@ -684,6 +735,7 @@ dev-setup-codyssey/
 - **절대 경로 vs 상대 경로**: 루트 기준(`/Users/...`) vs 현재 위치 기준(`./app`) — 4번 섹션
 - **권한 표기(r/w/x, 755/644)**: 숫자 합산 규칙과 소유자/그룹/기타 구분 — 5번 섹션
 - **커스텀 이미지 제작**: 공식 nginx 베이스 + COPY로 콘텐츠 교체 — 9번 섹션
+- **이미지 vs 컨테이너**: 이미지는 불변성(Immutable)을 가진 읽기 전용 템플릿이고, 컨테이너는 Writable Layer가 추가된 런타임 인스턴스 — 9번 섹션
 - **포트 매핑의 필요성**: 격리된 컨테이너 네트워크를 호스트와 연결 — 10번 섹션
 - **Docker 볼륨**: 컨테이너 생명주기와 독립적인 영속 저장소 — 12번 섹션
 - **Git vs GitHub**: 로컬 버전관리 도구 vs 원격 협업 플랫폼 — 13번 섹션
