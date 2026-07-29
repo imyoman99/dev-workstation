@@ -19,7 +19,7 @@
 | OS | macOS (서울캠퍼스 환경) |
 | 쉘/터미널 | zsh / 기본 터미널 |
 | 컨테이너 런타임 | OrbStack (sudo 권한 제약으로 Docker Desktop 대신 사용) |
-| Docker | v29.4.0 |
+| Docker | v28.5.2 |
 | Git | v2.53.0 |
 | 에디터 | VSCode (GitHub 연동) |
 | 실행기간 | 2026.07.28~07.30 |
@@ -97,6 +97,7 @@ $ rmdir test-dir                      # 디렉토리 삭제
 > - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/dev-setup-codyssey/app`
 > - 상대 경로: 현재 위치 기준 경로. 예: `./app`, `../screenshots`
 > - 호스트 환경에서 스크립트를 작성할 때는 어디서 실행하든 같은 곳을 가리키는 절대 경로, 프로젝트 내부 이동이나 컨테이너 내부 작업 시에는 이식성이 좋은 상대 경로를 사용하는 것을 권장한다.
+    (예시: 컨테이너 내부에서 작업할 때 cd /usr/share/nginx/html처럼 절대 경로를 쓰거나, 현재 위치에서 cd ../처럼 상대 경로를 유연하게 활용할 수 있다.)
 
 ---
 
@@ -147,7 +148,7 @@ drwxr-xr-x  2 ymru996022  ymru996022  64 Jul 28 15:13 perm-dir
 
 > - 권한 설정 이유: 보안상 일반 텍스트 파일은 불필요한 실행을 막기 위해 최소 권한인 644를, 디렉토리는 내부 탐색이 가능해야 하므로 755를 적용했다.
 > - 실무 적용 사례: 실행이 필요한 쉘 스크립트(.sh)는 755를, 민감한 인증 키 파일은 소유자만 읽을 수 있도록 600 권한을 부여하는 것이 권장 패턴이다.
-
+> - 소유자 변경: chmod로 권한 비트를 바꾸는 것 외에도, 필요시 chown 명령어를 사용해 파일이나 디렉토리의 소유자(User)와 그룹(Group) 자체를 변경하여 실무적인 접근 제어를 할 수 있다.
 📸 증거: [screenshots/07-permissions.png](screenshots/07-permissions.png)
 
 ---
@@ -272,6 +273,12 @@ b180f16e3f22   my-nginx-8080   0.00%     5.828MiB / 15.67GiB   0.04%     1.91kB 
 ```bash
 $ docker run hello-world
 
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+4f55086f7dd0: Pull complete 
+Digest: sha256:c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178
+Status: Downloaded newer image for hello-world:latest
+
 Hello from Docker!
 This message shows that your installation appears to be working correctly.
 
@@ -292,8 +299,9 @@ Share images, automate workflows, and more with a free Docker ID:
 
 For more examples and ideas, visit:
  https://docs.docker.com/get-started/
-...
 ```
+
+📸 증거: [screenshots/17-hello-world.png](screenshots/17-hello-world.png)
 
 ### 8-2. ubuntu 컨테이너 실행 및 내부 명령
 
@@ -449,6 +457,7 @@ b180f16e3f22   my-nginx   "/docker-entrypoint.…"   4 hours ago   Up 3 seconds 
 > - 컨테이너(Container): 이미지를 바탕으로 실행된 런타임 인스턴스로, 상단에 **쓰기 가능한 레이어(Writable Layer)**가 추가되어 내부에서 파일 생성이나 변경이 가능하다.
 
 > - 빌드 최적화 팁: .dockerignore 파일을 생성하여 불필요한 파일이 이미지 빌드 컨텍스트에 포함되는 것을 방지하면, 빌드 속도 향상과 용량 최적화가 가능하다.
+> - 이미지 캐시: 이미지를 변경하고 재빌드할 때, 변경되지 않은 이전 레이어는 캐시를 그대로 사용하여 빌드 속도를 최적화할 수 있다.
 ---
 
 ## 10. 포트 매핑 및 접속 증거
@@ -471,7 +480,7 @@ b180f16e3f22   my-nginx   "/docker-entrypoint.…"   4 hours ago   Up 3 seconds 
 > (8080/8081/8082)로 여러 번 실행할 수 있어, **동일 환경의 반복 재현**이 가능함을 확인했다.
 
 > 보안 및 접근 제어: 외부 접근이 불필요한 경우 -p 127.0.0.1:8080:80처럼 로컬호스트로만 포트를 바인딩하는 것이 안전하다. 만약 원격지 브라우저에서 접근이 안 된다면, 호스트 장비의 인바운드 방화벽 규칙과 포트 포워딩 설정을 우선 점검해야 한다.
-
+> 네임스페이스와 포트 노출: 컨테이너는 호스트와 완전히 독립된 네트워크 네임스페이스를 가지므로, 호스트의 포트와 컨테이너 내부 포트를 바인딩해야만 트래픽이 전달될 수 있다.
 ---
 
 ## 11. 바인드 마운트: 변경 즉시 반영
@@ -599,9 +608,11 @@ $ ls -al backup.tar
 
 -rw-r--r--  1 ymru996022  ymru996022  10240 Jul 29 11:25 backup.tar
 
-> **💡 볼륨 데이터 백업 절차**
-> 볼륨은 데이터를 안전하게 보관하지만, 만약의 사태(볼륨 자체의 삭제나 손상)에 대비한 백업 절차가 필요하다. 
-> 일회용 임시 컨테이너(`--rm`)를 띄워서 기존 볼륨(`my-nginx-data`)과 호스트의 디렉토리(`$(pwd)`)를 동시에 마운트한 뒤, 볼륨 안의 데이터를 압축(`tar`)하여 호스트로 빼내는 방식을 사용한다.
+
+> - **💡 볼륨 데이터 백업 절차**
+> - 볼륨은 데이터를 안전하게 보관하지만, 만약의 사태(볼륨 자체의 삭제나 손상)에 대비한 백업 절차가 필요하다. 
+> - 일회용 임시 컨테이너(`--rm`)를 띄워서 기존 볼륨(`my-nginx-data`)과 호스트의 디렉토리(`$(pwd)`)를 동시에 마운트한 뒤, 볼륨 안의 데이터를 압축(`tar`)하여 호스트로 빼내는 방식을 사용한다.
+> - 자동화 권장: 실제 운영 환경에서는 데이터 손실을 완벽히 방지하기 위해, 이러한 볼륨 백업 명령을 쉘 스크립트로 작성하여 일간(Daily) 또는 주간(Weekly) 단위로 자동화하는 것을 권장한다.
 
 ---
 
@@ -630,8 +641,9 @@ remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
 branch.main.vscode-merge-base=origin/main
-...
-```
+'''
+'''
+
 📸 증거: [screenshots/15-git-config.png](screenshots/15-git-config.png)
 
 ### 13-2. GitHub + VSCode 연동
@@ -653,28 +665,28 @@ branch.main.vscode-merge-base=origin/main
 
 ### 사례 1: 포트 충돌로 컨테이너 실행 실패
 
-- **문제**: `docker run -p 8080:80 ...` 실행 시 `port is already allocated` 에러 발생
+- **문제**: `docker ru -d -p 8080:80 ...` 실행 시 `failed: port is already allocated` 에러 발생
 - **원인 가설**: 이미 8080 포트를 점유한 컨테이너 또는 프로세스가 존재
 - **확인**:
   ```bash
   $ docker ps            # 8080 사용 중인 컨테이너 확인
   $ lsof -i :8080        # 호스트 프로세스 확인
   ```
-- **해결**: 기존 컨테이너를 `docker rm -f <이름>`으로 정리하거나,
-  다른 호스트 포트(예: 8081)로 매핑하여 실행. 컨테이너 포트(80)는 그대로 두고
-  호스트 포트만 바꾸면 되는 것이 포트 매핑의 장점임을 확인했다.
 
-### 사례 2: 컨테이너 이름 중복 에러
+- **문제**: `docker run -p 8080:80 ...` 실행 시 `port is already allocated` 에러 발생
+- **원인 가설**: 이미 8080 포트를 점유한 컨테이너 또는 프로세스가 존재
+- **해결**: 다른 호스트 포트(예: 8081)로 매핑하여 실행. 컨테이너 포트(80)는 그대로 두고
+           호스트 포트만 바꾸면 되는 것이 포트 매핑의 장점임을 확인했다. (컨테이너 이름 확인 후 $ docker rm -f 으로 기존 컨테이너 삭제 후 재실행하는 방법도 있다.)
 
-- **문제**: `docker run --name my-nginx-8080 ...` 재실행 시
-  `Conflict. The container name "/my-nginx-8080" is already in use` 에러
-- **원인 가설**: 이전에 종료된(Exited) 동일 이름의 컨테이너가 남아 있음
-- **확인**:
-  ```bash
-  $ docker ps -a    # Exited 상태의 동명 컨테이너 발견
-  ```
-- **해결**: `docker rm my-nginx-8080`으로 기존 컨테이너 삭제 후 재실행.
-  `docker ps`는 실행 중인 것만 보여주므로, 문제 파악에는 `docker ps -a`가 필요함을 배웠다.
+📸 증거: [screenshots/18-port-conflict.png](screenshots/18-port-conflict.png)
+
+### 사례 2: 컨테이너 라이프사이클 위반 (실행 중인 컨테이너 삭제 시도)
+
+- **문제**: 불필요한 컨테이너를 정리하기 위해 `docker rm my-safe-nginx`를 실행했으나, `You cannot remove a running container...` 에러가 발생하며 삭제가 거부됨.
+- **원인 진단**: 에러 메시지를 통해, 해당 컨테이너가 현재 서비스 중(`Up` 상태)이므로 도커 데몬이 시스템 보호를 위해 삭제를 원천 차단했음을 파악함. 이는 단순 오류가 아닌 도커의 **컨테이너 생명주기(Lifecycle) 보호 정책**에 의한 방어 기제임.
+- **해결**: 도커의 원칙에 따라 `docker stop my-safe-nginx` 명령어로 컨테이너를 안전하게 종료(`Exited` 상태로 전환)시킨 뒤, 다시 `docker rm`을 수행하여 정상적으로 삭제 완료함. 실무에서 운영 중인 서버의 실수에 의한 강제 삭제를 막아주는 중요한 개념임을 배움. (긴급 시에는 `rm -f`로 강제 삭제 가능함도 확인)
+
+- 📸 증거: [screenshots/19-lifecycle-error.png](screenshots/19-lifecycle-error.png)
 
 ---
 
@@ -725,7 +737,10 @@ dev-setup-codyssey/
     ├── 13-attach-vs-exec.png         # attach vs exec 비교
     ├── 14-git-config.png             # git config --list 결과
     ├── 15-vscode-github.png          # VSCode GitHub 연동
-    └── 16-github-vscode.png          # GitHub + VSCode 확인
+    ├── 16-github-vscode.png          # GitHub + VSCode 확인
+    ├── 17-hello-world.png            # hello-world 실행 결과 화면
+    ├── 18-port-conflict.png          # 사례 1: 포트 충돌 진단(lsof) 및 우회 해결
+    └── 19-lifecycle-error.png        # 사례 2: 도커 생명주기 위반 에러 진단 및 안전 종료(stop) 해결
 ```
 
 ---
@@ -739,7 +754,7 @@ dev-setup-codyssey/
 - **포트 매핑의 필요성**: 격리된 컨테이너 네트워크를 호스트와 연결 — 10번 섹션
 - **Docker 볼륨**: 컨테이너 생명주기와 독립적인 영속 저장소 — 12번 섹션
 - **Git vs GitHub**: 로컬 버전관리 도구 vs 원격 협업 플랫폼 — 13번 섹션
-
+- **백업 주기**: 주기적인 데이터 보호를 위해 일간 또는 주간 단위로 백업을 자동화하는 것을 권장
 ---
 
 ## 18. 참고 사항
