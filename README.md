@@ -500,6 +500,8 @@ $ docker run -d --name my-nginx-bind -p 8090:80 \
 ```bash
 # 변경 전: 브라우저에서 기존 내용 확인
 
+<h1>Hello from NGINX container</h1>
+
 # 호스트에서 파일 수정
 $ echo "<h1>Updated!</h1>" > bind-app/index.html
 $ curl localhost:8090 
@@ -752,6 +754,7 @@ dev-setup-codyssey/
 - **Docker 볼륨**: 컨테이너 생명주기와 독립적인 영속 저장소 — 12번 섹션
 - **Git vs GitHub**: 로컬 버전관리 도구 vs 원격 협업 플랫폼 — 13번 섹션
 - **백업 주기**: 주기적인 데이터 보호를 위해 일간 또는 주간 단위로 백업을 자동화하는 것을 권장
+- **브라우저 캐시(Cache) 우회**: 서버(도커) 세팅이 정상임에도 브라우저 캐시로 인해 이전 화면이 노출될 수 있음을 겪음. URL 뒤에 파라미터(?1 등)를 붙이거나 시크릿 모드를 활용하여 캐시를 무효화(Cache Busting)하는 프론트엔드 실무 팁을 체득함.
 ---
 
 ## 18. 참고 사항
