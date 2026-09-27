@@ -14,15 +14,15 @@
 
 ## 2. 실행 환경
 
-| 항목 | 내용 |
-|------|------|
-| OS | macOS (서울캠퍼스 환경) |
-| 쉘/터미널 | zsh / 기본 터미널 |
+| 항목            | 내용                                                   |
+| --------------- | ------------------------------------------------------ |
+| OS              | macOS (서울캠퍼스 환경)                                |
+| 쉘/터미널       | zsh / 기본 터미널                                      |
 | 컨테이너 런타임 | OrbStack (sudo 권한 제약으로 Docker Desktop 대신 사용) |
-| Docker | v28.5.2 |
-| Git | v2.53.0 |
-| 에디터 | VSCode (GitHub 연동) |
-| 실행기간 | 2026.07.28~07.30 |
+| Docker          | v28.5.2                                                |
+| Git             | v2.53.0                                                |
+| 에디터          | VSCode (GitHub 연동)                                   |
+| 실행기간        | 2026.07.28~07.30                                       |
 
 > **OrbStack 사용 이유**: 서울캠퍼스 보안 정책상 sudo 권한이 제한되어
 > 일반적인 Docker 설치가 불가능하다. OrbStack은 sudo 없이 Docker 엔진을
@@ -56,7 +56,7 @@
 ```bash
 $ pwd
 
-/Users/ymru996022/dev-setup-codyssey
+/Users/ymru996022/dev-workstation
 
 $ ls -al
 
@@ -94,7 +94,7 @@ $ rmdir test-dir                      # 디렉토리 삭제
 ```
 
 > **절대 경로 vs 상대 경로**
-> - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/dev-setup-codyssey/app`
+> - 절대 경로: 루트(`/`)부터 시작하는 전체 경로. 예: `/Users/username/dev-workstation/app`
 > - 상대 경로: 현재 위치 기준 경로. 예: `./app`, `../screenshots`
 > - 호스트 환경에서 스크립트를 작성할 때는 어디서 실행하든 같은 곳을 가리키는 절대 경로, 프로젝트 내부 이동이나 컨테이너 내부 작업 시에는 이식성이 좋은 상대 경로를 사용하는 것을 권장한다.
     (예시: 컨테이너 내부에서 작업할 때 cd /usr/share/nginx/html처럼 절대 경로를 쓰거나, 현재 위치에서 cd ../처럼 상대 경로를 유연하게 활용할 수 있다.)
@@ -337,7 +337,7 @@ UBUNTU_CODENAME=jammy
 root@a2279da0d836:/# exit
 exit
 
-ymru996022@c5r3s4 dev-setup-codyssey %
+ymru996022@c5r3s4 dev-workstation %
 ```
 
 📸 증거: [screenshots/11-ubuntu-shell.png](screenshots/11-ubuntu-shell.png)
@@ -405,10 +405,10 @@ $ docker attach my-nginx-8080
 
 ### 9-1. 베이스 이미지 선택 및 커스텀 포인트
 
-| 항목 | 내용 | 목적 |
-|------|------|------|
+| 항목          | 내용                         | 목적                         |
+| ------------- | ---------------------------- | ---------------------------- |
 | 베이스 이미지 | `nginx:latest` (공식 이미지) | 검증된 웹 서버를 그대로 활용 |
-| 커스텀 포인트 | `index.html` 교체 (`COPY`) | 나만의 정적 콘텐츠 제공 확인 |
+| 커스텀 포인트 | `index.html` 교체 (`COPY`)   | 나만의 정적 콘텐츠 제공 확인 |
 
 ### 9-2. Dockerfile
 
@@ -462,8 +462,8 @@ b180f16e3f22   my-nginx   "/docker-entrypoint.…"   4 hours ago   Up 3 seconds 
 
 ## 10. 포트 매핑 및 접속 증거
 
-| 접속 주소 | 컨테이너 | 결과 |
-|------|------|------|
+| 접속 주소             | 컨테이너      | 결과        |
+| --------------------- | ------------- | ----------- |
 | http://localhost:8080 | my-nginx-8080 | ✅ 접속 성공 |
 | http://localhost:8081 | my-nginx-8081 | ✅ 접속 성공 |
 | http://localhost:8082 | my-nginx-8082 | ✅ 접속 성공 |
@@ -638,7 +638,7 @@ core.bare=false
 core.logallrefupdates=true
 core.ignorecase=true
 core.precomposeunicode=true
-remote.origin.url=https://github.com/imyoman99/dev-setup-codyssey.git
+remote.origin.url=https://github.com/imyoman99/dev-workstation.git
 remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
 branch.main.remote=origin
 branch.main.merge=refs/heads/main
@@ -654,7 +654,7 @@ branch.main.vscode-merge-base=origin/main
 - 본 저장소를 VSCode에서 clone/push 하여 연동 확인
 
 📸 증거: [screenshots/16-vscode-github.png](screenshots/16-vscode-github.png)
-        정상적으로 Push 된 원격 저장소 확인 => [https://github.com/imyoman99/dev-setup-codyssey.git](https://github.com/imyoman99/dev-setup-codyssey.git)
+        정상적으로 Push 된 원격 저장소 확인 => [https://github.com/imyoman99/dev-workstation.git](https://github.com/imyoman99/dev-workstation.git)
 
 > **Git vs GitHub**
 > - Git: 내 컴퓨터에서 동작하는 **로컬 버전 관리 도구** (커밋, 브랜치, 이력 관리)
@@ -691,25 +691,25 @@ branch.main.vscode-merge-base=origin/main
 
 ## 15. 검증 방법 요약 (요구사항 ↔ 증거 매핑)
 
-| 검증 항목 | 사용한 명령 | 증거 위치 |
-|------|------|------|
-| 터미널 조작 | `pwd`, `ls -al`, `mkdir`, `touch`, `cat`, `cp`, `mv`, `rm` | [4번 섹션](#4-터미널-조작-로그) |
-| 권한 변경 | `chmod 644/755`, `ls -l`, `ls -ld` | [5번 섹션](#5-권한-실습-변경-전후-비교), screenshots/07 |
-| Docker 설치 | `docker --version`, `docker info` | [6번 섹션](#6-docker-설치-및-기본-점검), screenshots/08 |
-| 운영 명령 | `docker images`, `ps -a`, `logs`, `stats` | [7번 섹션](#7-docker-기본-운영-명령), screenshots/04, 05, 09, 10 |
-| 컨테이너 실행 | `docker run` (hello-world, ubuntu) | [8번 섹션](#8-컨테이너-실행-실습), screenshots/11, 12 |
-| 커스텀 이미지 | `docker build -t my-nginx .` | [9번 섹션](#9-커스텀-이미지-제작-방식-a-웹-서버-베이스), screenshots/13 |
-| 포트 매핑 | `docker run -p 8080:80` 외 2개 | [10번 섹션](#10-포트-매핑-및-접속-증거), screenshots/01, 02, 03 |
-| 바인드 마운트 | `docker run -v $(pwd)/bind-app:...` | [11번 섹션](#11-바인드-마운트-변경-즉시-반영), screenshots/14 |
-| 볼륨 영속성 | `docker volume create`, `rm -f` 후 재확인 | [12번 섹션](#12-docker-볼륨-데이터-영속성-검증), screenshots/06 |
-| Git/GitHub | `git config --list`, VSCode 연동 | [13번 섹션](#13-git-설정-및-github-연동), screenshots/15, 16 |
+| 검증 항목     | 사용한 명령                                                | 증거 위치                                                               |
+| ------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 터미널 조작   | `pwd`, `ls -al`, `mkdir`, `touch`, `cat`, `cp`, `mv`, `rm` | [4번 섹션](#4-터미널-조작-로그)                                         |
+| 권한 변경     | `chmod 644/755`, `ls -l`, `ls -ld`                         | [5번 섹션](#5-권한-실습-변경-전후-비교), screenshots/07                 |
+| Docker 설치   | `docker --version`, `docker info`                          | [6번 섹션](#6-docker-설치-및-기본-점검), screenshots/08                 |
+| 운영 명령     | `docker images`, `ps -a`, `logs`, `stats`                  | [7번 섹션](#7-docker-기본-운영-명령), screenshots/04, 05, 09, 10        |
+| 컨테이너 실행 | `docker run` (hello-world, ubuntu)                         | [8번 섹션](#8-컨테이너-실행-실습), screenshots/11, 12                   |
+| 커스텀 이미지 | `docker build -t my-nginx .`                               | [9번 섹션](#9-커스텀-이미지-제작-방식-a-웹-서버-베이스), screenshots/13 |
+| 포트 매핑     | `docker run -p 8080:80` 외 2개                             | [10번 섹션](#10-포트-매핑-및-접속-증거), screenshots/01, 02, 03         |
+| 바인드 마운트 | `docker run -v $(pwd)/bind-app:...`                        | [11번 섹션](#11-바인드-마운트-변경-즉시-반영), screenshots/14           |
+| 볼륨 영속성   | `docker volume create`, `rm -f` 후 재확인                  | [12번 섹션](#12-docker-볼륨-데이터-영속성-검증), screenshots/06         |
+| Git/GitHub    | `git config --list`, VSCode 연동                           | [13번 섹션](#13-git-설정-및-github-연동), screenshots/15, 16            |
 
 ---
 
 ## 16. 폴더 구조
 
 ```
-dev-setup-codyssey/
+dev-workstation/
 ├── README.md                         # 전체 프로젝트 설명서
 ├── backup.tar                        # 볼륨 백업 실습 결과물 (임시 컨테이너로 추출)
 ├── app/
@@ -759,5 +759,5 @@ dev-setup-codyssey/
 
 ## 18. 참고 사항
 
-저장소 이름이 `ai-codyssey`에서 `dev-setup-codyssey`로 변경되었으며, 이로 인해 문서 내 일부 경로·표기와 스크린샷 파일명/설명이 기존 자료와 조금 다르게 보일 수 있습니다. 다만 실습 내용, 실행 결과, 파일 구조, Docker 및 Git 동작 방식 자체는 동일하게 반영되었습니다.
+저장소 이름이 `dev-workstation`으로 변경되었으며, 이로 인해 문서 내 일부 경로·표기와 스크린샷 파일명/설명이 기존 자료와 조금 다르게 보일 수 있습니다. 다만 실습 내용, 실행 결과, 파일 구조, Docker 및 Git 동작 방식 자체는 동일하게 반영되었습니다.
 
